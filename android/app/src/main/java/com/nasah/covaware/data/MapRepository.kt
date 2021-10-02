@@ -25,4 +25,14 @@ class MapRepository {
 			api.getHeatSquares(top, bottom, left, right)
 		}.getOrNull()
 	}
+
+	suspend fun findPlaceInMap(
+		latitude: Double,
+		longtitude: Double,
+		placeType: String
+	): PlacesInMapDTO?{
+		return kotlin.runCatching {
+			api.findPlaceInMap(latitude, longtitude, placeType)
+		}.getOrNull()
+	}
 }

@@ -12,4 +12,11 @@ interface MapApi {
 		@Query("left") left: Double,
 		@Query("right") right: Double
 	): List<HeatSquareDTO>
+
+	@GET("/testPlaces")
+	suspend fun findPlaceInMap(
+		@Query("latitude") latitude: Double,
+		@Query("longtitude") longtitude: Double,
+		@Query("placeType") placeType: String
+	): PlacesInMapDTO
 }

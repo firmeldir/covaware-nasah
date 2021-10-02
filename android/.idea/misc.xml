@@ -3,8 +3,32 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_attractions_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_brush_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_church_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_church_24.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_color_lens_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_face_retouching_natural_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_fitness_center_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_local_bar_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_local_cafe_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_local_grocery_store_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_local_laundry_service_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_local_library_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_local_mall_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_local_pharmacy_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_museum_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_nightlife_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_restaurant_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_spa_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_subway_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_synagogue_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/drawable/round_theaters_20.xml" value="0.18796296296296297" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/font/raleway_regular.xml" value="0.23072916666666668" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/font/raleway_semibold.xml" value="0.23072916666666668" />
         <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/layout/activity_main.xml" value="0.20052083333333334" />
         <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/layout/activity_map.xml" value="0.20052083333333334" />
+        <entry key="..\:/Users/vladyslav.hanin/Desktop/projects-expl/covaware-nasah-hideapp/android/app/src/main/res/layout/marker_place.xml" value="0.6666666666666666" />
       </map>
     </option>
   </component>

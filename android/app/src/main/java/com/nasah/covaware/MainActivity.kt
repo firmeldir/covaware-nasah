@@ -6,11 +6,14 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
 import com.nasah.covaware.map.MapActivity
 
+@ExperimentalAnimationApi
 class MainActivity : AppCompatActivity() {
 
 	private val requestPermissionLauncher =
@@ -26,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 
-		findViewById<MaterialButton>(R.id.enterButton).setOnClickListener {
+		findViewById<Button>(R.id.enterButton).setOnClickListener {
 			if(ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 				startMap()
 			}
