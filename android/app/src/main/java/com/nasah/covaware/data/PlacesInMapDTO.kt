@@ -17,8 +17,21 @@ data class PlacesInMapDTO(
     fun toPLacesToVisit(type: com.nasah.covaware.map.Place): PLacesToVisit {
         return PLacesToVisit(
             places?.map { place ->
+                val risk: Risk = place.risk?.let {
+                    when {
+                        it > 80 -> Risk.EXTREMELY_HIGH
+                        it > 60 -> Risk.HIGH
+                        it > 40 -> Risk.MODERATE
+                        it > 20 -> Risk.LOW
+                        else -> Risk.MINIMAL
+                    }
+                } ?: Risk.values()[Random.nextInt(0, 5)]
+
+                Log.e("vlad-s", "--- ${place.name}")
+                Log.e("vlad-s", "PLaceToVisit: ${place.hours?.week}")
+
                 PLaceToVisit(
-                    risk = Risk.values()[Random.nextInt(0, 5)],
+                    risk = risk,
                     location = LatLng(place.geometry!!.lat!!, place.geometry.lng!!),
                     name = place.name!!,
                     id = place.placeId!!,
@@ -48,6 +61,29 @@ data class PlacesInMapDTO(
                                     }
                                 }
                             }
+                        } ?: kotlin.run {
+                            weeks.getOrNull(6)?.hours?.let { list ->
+                                for(i in listOf(0, 3, 6, 9, 12, 15, 18, 21)){
+                                    list.find{ it.hour == i }?.let {
+                                        if(it.percentage != 0){
+                                            val risk = when{
+                                                it.percentage!! > 80 -> Risk.EXTREMELY_HIGH
+                                                it.percentage > 60 -> Risk.HIGH
+                                                it.percentage > 40 -> Risk.MODERATE
+                                                it.percentage > 20 -> Risk.LOW
+                                                else -> Risk.MINIMAL
+                                            }
+
+                                            hours.add(
+                                                RecommendedHour(
+                                                    risk = risk,
+                                                    timeText = "on weekdays at $i o'clock"
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         //on weekdays
                         weeks.getOrNull(1)?.hours?.let { list ->
@@ -71,6 +107,29 @@ data class PlacesInMapDTO(
                                     }
                                 }
                             }
+                        } ?: kotlin.run {
+                            weeks.getOrNull(2)?.hours?.let { list ->
+                                for(i in listOf(0, 3, 6, 9, 12, 15, 18, 21)){
+                                    list.find{ it.hour == i }?.let {
+                                        if(it.percentage != 0){
+                                            val risk = when{
+                                                it.percentage!! > 80 -> Risk.EXTREMELY_HIGH
+                                                it.percentage > 60 -> Risk.HIGH
+                                                it.percentage > 40 -> Risk.MODERATE
+                                                it.percentage > 20 -> Risk.LOW
+                                                else -> Risk.MINIMAL
+                                            }
+
+                                            hours.add(
+                                                RecommendedHour(
+                                                    risk = risk,
+                                                    timeText = "on weekdays at $i o'clock"
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         hours
                     } ?: emptyList()
@@ -88,7 +147,9 @@ data class Place(
     @SerializedName("place_id")
     val placeId: String?,
     @SerializedName("hours")
-    val hours: Hours?
+    val hours: Hours?,
+    @SerializedName("risk")
+    val risk: Double? = null,
 )
 
 data class Geometry(
