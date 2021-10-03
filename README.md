@@ -1,4 +1,8 @@
 # covaware-nasah
+## _United to Fight the Global Crisis_
+
+# Android application
+To open Android Project install at least Arctic Fox 2020.3.1 with Kotlin.
 
 # Covid prediction model
 Provides a Flask API that allows to calculate Covid risks
@@ -17,3 +21,5 @@ Currently deployed to AWS [ECS](https://aws.amazon.com/ecs/?whats-new-cards.sort
 [ECR](https://aws.amazon.com/ecr/) public Docker image: https://gallery.ecr.aws/w8q0t3l7/model
 
 Deployment URL: http://ec2co-ecsel-u4qnetyi7ch9-1971977146.eu-west-1.elb.amazonaws.com:5000/
+
+$ 
