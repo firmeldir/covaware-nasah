@@ -498,9 +498,9 @@ class MapActivity : AppCompatActivity() {
 				CameraPosition.Builder()
 					.apply {
 						a.locationComponent.lastKnownLocation?.toLatLng()?.let {
-							//target(it)
+							target(it)
 							//target(LatLng(40.732345, -73.987333))
-							target(LatLng(40.732345, -73.247333))
+							//target(LatLng(40.732345, -73.247333))
 						}
 						zoom(13.0)
 					}

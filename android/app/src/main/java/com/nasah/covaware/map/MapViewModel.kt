@@ -91,11 +91,11 @@ class MapViewModel(application: Application) : AndroidViewModel(application){
 //							 40.732345,
 //							 -73.987333,
 //						 ),
-						 LatLng(
-							 40.732345,
-							 -73.247333
-						 ),
-						 //latLng,
+//						 LatLng(
+//							 40.732345,
+//							 -73.247333
+//						 ),
+						 latLng,
 						 750
 					 )
 					 _currentRiskLevel.value = repository.getHeatSquares(
@@ -152,12 +152,12 @@ class MapViewModel(application: Application) : AndroidViewModel(application){
 		findPlaceInMapJob?.cancel()
 		findPlaceInMapJob = viewModelScope.launch {
 			_placesToVisit.value = repository.findPlaceInMap(
-//						currentLocation.latitude,
-//						currentLocation.longitude,
+						currentLocation.latitude,
+						currentLocation.longitude,
 //				40.732345,
 //				-73.987333,
-				40.732345,
-				-73.247333,
+//				40.732345,
+//				-73.247333,
 				place.id,
 
 				sharedPref.getInt(SHARED_PREF_AGE, 18),
