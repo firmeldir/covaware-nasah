@@ -1,7 +1,9 @@
 package com.nasah.covaware.map
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -11,20 +13,30 @@ import com.mapbox.mapboxsdk.geometry.LatLng
 import com.nasah.covaware.LOG_TAG
 import com.nasah.covaware.data.HeatSquareDTO
 import com.nasah.covaware.data.MapRepository
+import com.nasah.covaware.data.toRisk
+import com.nasah.covaware.reg.REG_SHARED_PREF_NAME
+import com.nasah.covaware.reg.SHARED_PREF_AGE
+import com.nasah.covaware.reg.SHARED_PREF_DISEASE
+import com.nasah.covaware.reg.SHARED_PREF_VACCINE
 import com.nasah.covaware.utils.generateMarkerView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 
-class MapViewModel : ViewModel(){
+class MapViewModel(application: Application) : AndroidViewModel(application){
+
+	var currentLocation: LatLng? = null
 
 	private val repository: MapRepository by lazy { MapRepository() }
+	private val sharedPref by lazy { application.getSharedPreferences(REG_SHARED_PREF_NAME, Activity.MODE_PRIVATE) }
 
 	private var heatmapPreviousSquares: List<HeatMapSquare> = emptyList()
 
-	val isPlaceMenuOpen = MutableStateFlow(false)
+	private val isPlaceMenuOpen = MutableStateFlow(false)
 
 	private val _actualCameraLocation = MutableSharedFlow<LatLng>(extraBufferCapacity = 64, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 	val heatmapSquares: Flow<HeatMapSquares> = _actualCameraLocation
@@ -37,7 +49,11 @@ class MapViewModel : ViewModel(){
 					array[3] ?: 0.0,
 					array[1] ?: 0.0,
 					array[0] ?: 0.0,
-					array[2] ?: 0.0
+					array[2] ?: 0.0,
+
+					sharedPref.getInt(SHARED_PREF_AGE, 18),
+					sharedPref.getBoolean(SHARED_PREF_DISEASE, false),
+					sharedPref.getBoolean(SHARED_PREF_VACCINE, false)
 				)
 				emit(squares)
 			}
@@ -54,6 +70,54 @@ class MapViewModel : ViewModel(){
 	private val _placesToVisit = MutableStateFlow<PLacesToVisit?>(null)
 	val placesToVisit = _placesToVisit.map { it ?: PLacesToVisit(emptyList()) }
 
+	val isCloseButton = isPlaceMenuOpen.combine(_placesToVisit){ open, places ->
+		open || places != null
+	}
+
+	val isPlacesList = isPlaceMenuOpen.combine(_placesToVisit){ open, places ->
+		open && places == null
+	}
+
+	private val _chosenPlace = MutableStateFlow<PLaceToVisit?>(null)
+	val chosenPlace: Flow<PLaceToVisit?> = _chosenPlace
+
+	private val _currentRiskLevel = MutableStateFlow<Risk?>(null)
+	val currentRiskLevel: Flow<Risk?> = merge(
+		flow {
+			 while (currentCoroutineContext().isActive){
+				 currentLocation?.let { latLng ->
+					 val array = rhombusFromCoordinates(
+//						 LatLng(
+//							 40.732345,
+//							 -73.987333,
+//						 ),
+						 LatLng(
+							 40.732345,
+							 -73.247333
+						 ),
+						 //latLng,
+						 750
+					 )
+					 _currentRiskLevel.value = repository.getHeatSquares(
+						 array[3] ?: 0.0,
+						 array[1] ?: 0.0,
+						 array[0] ?: 0.0,
+						 array[2] ?: 0.0,
+
+						 sharedPref.getInt(SHARED_PREF_AGE, 18),
+						 sharedPref.getBoolean(SHARED_PREF_DISEASE, false),
+						 sharedPref.getBoolean(SHARED_PREF_VACCINE, false)
+					 )?.getOrNull(0)?.let {
+					 	it.risk?.toRisk()
+					 }
+					 kotlinx.coroutines.delay(1000 * 60 * 60L)
+				 }
+				 kotlinx.coroutines.delay(1000L)
+			 }
+		},
+		_currentRiskLevel
+	)
+
 	fun newCameraLocation(location: LatLng){
 		Log.i(LOG_TAG, "newCameraLocation()")
 		viewModelScope.launch {
@@ -61,7 +125,23 @@ class MapViewModel : ViewModel(){
 		}
 	}
 
+	fun onPlaceClick(id: String){
+		_placesToVisit.value?.value?.find {
+			it.id == id
+		}?.let {
+			_chosenPlace.value = it
+		}
+	}
+
 	fun menuChange(){
+		if(_chosenPlace.value != null){
+			_chosenPlace.value = null
+			return
+		}
+		if(_placesToVisit.value != null){
+			_placesToVisit.value = null
+			return
+		}
 		isPlaceMenuOpen.value = !isPlaceMenuOpen.value
 	}
 
@@ -74,19 +154,20 @@ class MapViewModel : ViewModel(){
 			_placesToVisit.value = repository.findPlaceInMap(
 //						currentLocation.latitude,
 //						currentLocation.longitude,
+//				40.732345,
+//				-73.987333,
 				40.732345,
-				-73.987333,
-				place.id
+				-73.247333,
+				place.id,
+
+				sharedPref.getInt(SHARED_PREF_AGE, 18),
+				sharedPref.getBoolean(SHARED_PREF_DISEASE, false),
+				sharedPref.getBoolean(SHARED_PREF_VACCINE, false)
 			)?.toPLacesToVisit(place)
 		}
 	}
 
-	fun clearPlaces(){
-		_placesToVisit.value = null
-	}
-
-	private fun rhombusFromCoordinates(location: LatLng): Array<Double?>{
-		val pDistanceInMeters = 5000
+	private fun rhombusFromCoordinates(location: LatLng, pDistanceInMeters: Int = 5000): Array<Double?>{
 		val array = Array<Double?>(4){ null }
 		val latRadian: Double = Math.toRadians(location.latitude)
 		val degLatKm = 110.574235

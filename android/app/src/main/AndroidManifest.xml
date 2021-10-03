@@ -30,6 +30,10 @@
             android:exported="true"
             android:name=".map.MapActivity" />
 
+        <activity
+            android:exported="true"
+            android:name=".reg.RegisterActivity" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

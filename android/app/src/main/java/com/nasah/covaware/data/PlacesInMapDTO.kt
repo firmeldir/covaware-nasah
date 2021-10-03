@@ -3,10 +3,7 @@ package com.nasah.covaware.data
 import android.util.Log
 import com.google.gson.annotations.SerializedName
 import com.mapbox.mapboxsdk.geometry.LatLng
-import com.nasah.covaware.map.HeatMapSquare
-import com.nasah.covaware.map.PLaceToVisit
-import com.nasah.covaware.map.PLacesToVisit
-import com.nasah.covaware.map.Risk
+import com.nasah.covaware.map.*
 import kotlin.random.Random
 
 data class PlacesInMapDTO(
@@ -14,21 +11,69 @@ data class PlacesInMapDTO(
     val city: String?,
     @SerializedName("county")
     val county: String?,
-    @SerializedName("hours")
-    val hours: Hours?,
     @SerializedName("places")
     val places: List<Place>?
 ){
     fun toPLacesToVisit(type: com.nasah.covaware.map.Place): PLacesToVisit {
-        Log.e("vlad", this.hours?.week?.get(0).toString())
         return PLacesToVisit(
-            places?.map {
+            places?.map { place ->
                 PLaceToVisit(
-                    location = LatLng(it.geometry!!.lat!!, it.geometry.lng!!),
-                    name = it.name!!,
-                    id = it.placeId!!,
                     risk = Risk.values()[Random.nextInt(0, 5)],
-                    type = type
+                    location = LatLng(place.geometry!!.lat!!, place.geometry.lng!!),
+                    name = place.name!!,
+                    id = place.placeId!!,
+                    type = type,
+                    recommendedHours =
+                    place.hours?.week?.let { weeks ->
+                        val hours = mutableListOf<RecommendedHour>()
+                        //on weekends
+                        weeks.getOrNull(0)?.hours?.let { list ->
+                            for(i in listOf(0, 3, 6, 9, 12, 15, 18, 21)){
+                                list.find{ it.hour == i }?.let {
+                                    if(it.percentage != 0) {
+                                        val risk = when {
+                                            it.percentage!! > 80 -> Risk.EXTREMELY_HIGH
+                                            it.percentage > 60 -> Risk.HIGH
+                                            it.percentage > 40 -> Risk.MODERATE
+                                            it.percentage > 20 -> Risk.LOW
+                                            else -> Risk.MINIMAL
+                                        }
+
+                                        hours.add(
+                                            RecommendedHour(
+                                                risk = risk,
+                                                timeText = "on weekends at $i o'clock"
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        //on weekdays
+                        weeks.getOrNull(1)?.hours?.let { list ->
+                            for(i in listOf(0, 3, 6, 9, 12, 15, 18, 21)){
+                                list.find{ it.hour == i }?.let {
+                                    if(it.percentage != 0){
+                                        val risk = when{
+                                            it.percentage!! > 80 -> Risk.EXTREMELY_HIGH
+                                            it.percentage > 60 -> Risk.HIGH
+                                            it.percentage > 40 -> Risk.MODERATE
+                                            it.percentage > 20 -> Risk.LOW
+                                            else -> Risk.MINIMAL
+                                        }
+
+                                        hours.add(
+                                            RecommendedHour(
+                                                risk = risk,
+                                                timeText = "on weekdays at $i o'clock"
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        hours
+                    } ?: emptyList()
                 )
             } ?: emptyList()
         )
@@ -41,7 +86,9 @@ data class Place(
     @SerializedName("name")
     val name: String?,
     @SerializedName("place_id")
-    val placeId: String?
+    val placeId: String?,
+    @SerializedName("hours")
+    val hours: Hours?
 )
 
 data class Geometry(

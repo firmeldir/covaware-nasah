@@ -1,9 +1,7 @@
 package com.nasah.covaware.map
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
+import android.graphics.PointF
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -16,13 +14,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.NordicWalking
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.LocationSearching
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,12 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.mapbox.geojson.BoundingBox.fromLngLats
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
@@ -57,15 +51,14 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.nasah.covaware.*
-import com.nasah.covaware.R
 import com.nasah.covaware.utils.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.cos
-import kotlin.random.Random
 
 private const val HEATMAP_SOURCE_ID = "heatmap-source-id"
 private const val HEATMAP_LAYER_ID = "heatmap-layer-id"
@@ -74,6 +67,7 @@ private const val COLOR_PROPERTY = "color-property"
 private const val PLACES_SOURCE_ID = "places-source-id"
 private const val PLACES_LAYER_ID = "places-layer-id"
 private const val ICON_PROPERTY = "icon-id"
+private const val PLACE_KEY = "place-ket"
 
 @ExperimentalAnimationApi
 class MapActivity : AppCompatActivity() {
@@ -113,8 +107,21 @@ class MapActivity : AppCompatActivity() {
 	private fun MapScreen(
 		viewModel: MapViewModel = viewModel()
 	){
-		val isPlaceMenuOpen by viewModel.isPlaceMenuOpen.collectAsState(initial = false)
+		val isCloseButton by viewModel.isCloseButton.collectAsState(initial = false)
+		val isPlacesList by viewModel.isPlacesList.collectAsState(initial = false)
+		val chosenPlace by viewModel.chosenPlace.collectAsState(initial = null)
+		val currentRiskLevel by viewModel.currentRiskLevel.collectAsState(initial = null)
 		var map by remember { mutableStateOf<MapboxMap?>(null) }
+
+		LaunchedEffect(true){
+			while (this.isActive){
+				map?.locationComponent?.lastKnownLocation?.toLatLng()?.let {
+					viewModel.currentLocation = it
+					delay(1000 * 60 * 10L)
+				}
+				delay(1000L)
+			}
+		}
 
 		Scaffold(
 			floatingActionButton = {
@@ -122,9 +129,9 @@ class MapActivity : AppCompatActivity() {
 					backgroundColor = MaterialTheme.colors.surface,
 					onClick = { viewModel.menuChange() },
 				) {
-					Crossfade(targetState = !isPlaceMenuOpen) {
+					Crossfade(targetState = !isCloseButton) {
 						if(it){
-							Icon(Icons.Rounded.Place, contentDescription = null)
+							Icon(Icons.Rounded.LocationSearching, contentDescription = null)
 						}else{
 							Icon(Icons.Rounded.Close, contentDescription = null)
 						}
@@ -132,11 +139,33 @@ class MapActivity : AppCompatActivity() {
 
 				}
 			},
-			floatingActionButtonPosition = FabPosition.Center
+			isFloatingActionButtonDocked = true,
+			bottomBar = {
+				BottomAppBar(
+					// Defaults to null, that is, No cutout
+					cutoutShape = MaterialTheme.shapes.small.copy(
+						CornerSize(percent = 50)
+					)
+				) {
+					currentRiskLevel?.let {
+						Row {
+							Spacer(modifier = Modifier.width(16.dp))
+							Text(
+								color = MaterialTheme.colors.surface,
+								text = "Your risk level: "
+							)
+							Text(
+								color = Color(android.graphics.Color.parseColor(it.color)),
+								text = it.riskName
+							)
+						}
+					}
+				}
+			}
 		) {
 			Box (Modifier.fillMaxSize()) {
 				MapContent({ map = it },viewModel)
-				AnimatedVisibility(visible = isPlaceMenuOpen) {
+				AnimatedVisibility(visible = isPlacesList) {
 					LazyColumn{
 						items(items = places.value) { place ->
 							PlaceItem(place) {
@@ -145,6 +174,61 @@ class MapActivity : AppCompatActivity() {
 						}
 					}
 				}
+				AnimatedVisibility(visible = chosenPlace != null) {
+					Column {
+						Surface(
+							color = MaterialTheme.colors.surface.copy(alpha = 0.8f),
+							shape = MaterialTheme.shapes.medium,
+							modifier = Modifier
+								.fillMaxWidth()
+								.padding(12.dp)
+								.shadow(4.dp)
+						) {
+							Text(
+								style = MaterialTheme.typography.subtitle2,
+								text = "Times to visit ${chosenPlace?.name ?: ""}:",
+								modifier = Modifier.padding(vertical = 20.dp, horizontal = 4.dp)
+							)
+						}
+						LazyColumn{
+							items(items = chosenPlace?.recommendedHours ?: emptyList()) { hour ->
+								HourItem(hour)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@Composable
+	private fun HourItem(hour: RecommendedHour){
+		Surface(
+			color = MaterialTheme.colors.surface.copy(alpha = 0.6f),
+			shape = MaterialTheme.shapes.medium,
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(12.dp)
+				.shadow(4.dp)
+		) {
+			Row(
+				modifier = Modifier.padding(vertical = 20.dp, horizontal = 4.dp)
+			) {
+				Text(
+					text = hour.timeText + ",",
+					maxLines = 1,
+					color = MaterialTheme.colors.primary,
+					style = MaterialTheme.typography.body1,
+					modifier = Modifier.align(Alignment.CenterVertically)
+				)
+				Spacer(modifier = Modifier.width(16.dp))
+				Text(
+					text = "risk level: ${hour.risk.riskName}",
+					maxLines = 1,
+					color = MaterialTheme.colors.secondary,
+					style = MaterialTheme.typography.body1,
+					modifier = Modifier.align(Alignment.CenterVertically)
+				)
 			}
 		}
 	}
@@ -218,7 +302,11 @@ class MapActivity : AppCompatActivity() {
 					view.awaitMap().let { m ->
 						Log.e(LOG_TAG, "This should not be called more than two times")
 
-						setupMapboxMap(m, { viewModel.newCameraLocation(it) }){ _, s, h, p ->
+						setupMapboxMap(
+							m,
+							{ viewModel.newCameraLocation(it) },
+							{ viewModel.onPlaceClick(it) }
+						){ _, s, h, p ->
 							onMapReady(m)
 							style = s
 							heatmapSource = h
@@ -265,6 +353,7 @@ class MapActivity : AppCompatActivity() {
 		for(e in elements){
 			val feature = Feature.fromGeometry(Point.fromLngLat(e.location.longitude, e.location.latitude)).apply {
 				addStringProperty(ICON_PROPERTY, riskTypeId(e.risk, e.type))
+				addStringProperty(PLACE_KEY, e.id)
 			}
 			features.add(feature)
 		}
@@ -276,6 +365,7 @@ class MapActivity : AppCompatActivity() {
 	private fun setupMapboxMap(
 		map: MapboxMap,
 		onCameraIdle: (LatLng) -> Unit,
+		onMapClicked: (String) -> Unit, //id
 		onMapReady: (MapboxMap, Style, GeoJsonSource, GeoJsonSource) -> Unit
 	){
 		map.uiSettings.isCompassEnabled = false
@@ -303,7 +393,13 @@ class MapActivity : AppCompatActivity() {
 
 			val heatmapSource = setupHeatmap(style)
 			val placesSource = setupPlaces(style)
-			setupCamera(map, onCameraIdle)
+			setupCamera(map, { pointF ->
+				map.queryRenderedFeatures(pointF, PLACES_LAYER_ID).let {
+					onMapClicked(it[0].properties()?.get(PLACE_KEY)?.asString ?: "")
+				}
+			},
+				onCameraIdle
+			)
 			onMapReady(map, style, heatmapSource, placesSource)
 		}
 	}
@@ -388,15 +484,23 @@ class MapActivity : AppCompatActivity() {
 		return array
 	}
 
-	private fun setupCamera(a: MapboxMap, onCameraIdle: (LatLng) -> Unit){
+	private fun setupCamera(a: MapboxMap, onMapClicked: (PointF) -> Unit, onCameraIdle: (LatLng) -> Unit){
+		fun project(latLng: LatLng) : PointF = a.projection.toScreenLocation(latLng)
+
 		a.addOnCameraIdleListener { onCameraIdle(getCurrentCameraLocation(a)) }
+		a.addOnMapClickListener { latLng ->
+			onMapClicked(project(latLng))
+			false
+		}
+
 		a.animateCamera(
 			CameraUpdateFactory.newCameraPosition(
 				CameraPosition.Builder()
 					.apply {
 						a.locationComponent.lastKnownLocation?.toLatLng()?.let {
 							//target(it)
-							target(LatLng(40.732345, -73.987333))
+							//target(LatLng(40.732345, -73.987333))
+							target(LatLng(40.732345, -73.247333))
 						}
 						zoom(13.0)
 					}

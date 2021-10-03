@@ -24,5 +24,13 @@ data class PLaceToVisit(
 	val name: String,
 	val id: String,
 	val risk: Risk,
-	val type: Place
+	val type: Place,
+	val recommendedHours: List<RecommendedHour>
 )
+
+@Immutable
+data class RecommendedHour(
+	val risk: Risk,
+	val timeText: String
+)
+
