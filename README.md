@@ -22,4 +22,10 @@ Currently deployed to AWS [ECS](https://aws.amazon.com/ecs/?whats-new-cards.sort
 
 Deployment URL: http://ec2co-ecsel-u4qnetyi7ch9-1971977146.eu-west-1.elb.amazonaws.com:5000/
 
-$ 
+# hakaton-backend
+
+hakaton backend
+
+### 1. Install dependencies: run command `npm ci`
+
+### 2. To start the project simply run `npm run start`
